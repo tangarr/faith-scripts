@@ -48,23 +48,33 @@ db_execute()
 	echo "SQL: " $1
 	echo $1 | $db_open_cmd
 }
-db_create_tab_ifaces()
+#db_create_tab_ifaces()
+#{
+#	db_execute "create table ifaces (dev text, hwaddr text, ip text);"
+#}
+db_create_tab_general()
 {
-	db_execute "create table ifaces (dev text, hwaddr text, ip text);" 
+    db_execute "create table general (key text primary key, value text);"
 }
 db_create_tab_disk()
 {
 	db_execute "create table disk (dev text, size text, pt_type text);" 
 	db_execute "create table partition (dev text, id int, size text, fs_type text, flags text, primary key (dev, id), foreign key(dev) references disk(dev) );" 
 }
-db_insert_ifaces()
+#db_insert_ifaces()
+#{
+#	for dev in $(get_interfaces)
+#	do
+#		ip=$(get_if_ip $dev)
+#		hw=$(get_if_hw $dev)
+#		db_execute "insert into ifaces values ('$dev','$hw','$ip');"
+#	done
+#}
+db_insert_primary_mac()
 {
-	for dev in $(get_interfaces)
-	do
-		ip=$(get_if_ip $dev)
-		hw=$(get_if_hw $dev)
-		db_execute "insert into ifaces values ('$dev','$hw','$ip');"
-	done
+    iface=$(ip route get $SERVER | awk '/dev/{ print $5 }')
+    hw=$(get_if_hw $iface)
+    db_execute "insert into general values ('mac','$hw');"
 }
 get_disks()
 {
@@ -141,6 +151,12 @@ init()
 		exit 1
 	fi
 
+	if [ -z $SERVER ]
+	then
+		echo 'Variable $SERVER not set'
+		exit 1		
+	fi
+
 	if [ -e $db_name ]
 	then
 		rm $db_name
@@ -148,10 +164,11 @@ init()
 }
 
 #--------MAIN--------------
+
 init
-db_create_tab_ifaces
+db_create_tab_general
 db_create_tab_disk
-db_insert_ifaces
+db_insert_primary_mac
 db_insert_disks
 
 exit 0
