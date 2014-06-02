@@ -2,7 +2,7 @@
 
 #-------ZMIENNE------------
 db_name="host.db"
-db_open_cmd="sqlite $db_name"
+db_open_cmd="sqlite3 $db_name"
 
 
 #-------FUNKCJE------------
