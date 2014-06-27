@@ -72,7 +72,13 @@ db_create_tab_disk()
 #}
 db_insert_primary_mac()
 {
-    iface=$(ip route get $SERVER | awk '/dev/{ print $5 }')
+    IP_ADDR=$(host $SERVER | awk '/has address/ { print $4 }') 
+    if [ -z $IP_ADDR ]
+    then
+        IP_ADDR="8.8.8.8"
+    fi   
+    ip route get $IP_ADDR | awk '/dev/{ print $5 }'
+    iface=$(ip route get $IP_ADDR | awk '/dev/{ print $5 }')
     hw=$(get_if_hw $iface)
     db_execute "insert into general values ('mac','$hw');"
 }
