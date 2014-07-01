@@ -1,0 +1,6 @@
+#!/bin/bash
+/sbin/ethtool -s `/sbin/ip route ls | grep default | awk '{ print $5 }'` wol g
+mkdir /host
+cd /host
+/opt/hostinfo.sh
+/bin/openvt -s -w -- /opt/faith.sh && /sbin/halt
