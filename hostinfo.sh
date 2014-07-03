@@ -74,15 +74,15 @@ get_disks()
 get_disk_size()
 {
 	#LC_ALL=C fdisk -l 2>/dev/null | awk -F"[ ,]" '/Disk \/dev\/'$1'/ {print $3$4}'
-	LC_ALL=C parted /dev/$1 unit MB print | awk '/Disk/{print $3}'
+	LC_ALL=C parted /dev/$1 unit MiB print | awk '/Disk/{print $3}'
 }
 get_disk_label()
 {
-	LC_ALL=C parted /dev/$1 unit MB print | awk '/Partition Table:/{print $3}'
+	LC_ALL=C parted /dev/$1 unit MiB print | awk '/Partition Table:/{print $3}'
 }
 get_partitions()
 {
-	LC_ALL=C parted /dev/$1 unit MB print | grep '^ [1-9][0-9]*' | awk '{print $1 "_" $4 "_" $5 "_" $6 "_" $7}'
+	LC_ALL=C parted /dev/$1 unit MiB print | grep '^ [1-9][0-9]*' | awk '{print $1 "_" $4 "_" $5 "_" $6 "_" $7}'
 }
 db_insert_disks()
 {
