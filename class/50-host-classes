@@ -1,0 +1,23 @@
+#! /bin/bash
+
+iface=$(ip route ls | grep default | awk '{print $5}')
+ip=$(ifconfig $iface | awk -F"[: ]" '/inet addr/{print $13}')
+
+echo GRUB_PC DEBIAN
+
+for file in *.hostlist
+do
+	lab=$(echo $file | awk -F. '{print $1}')
+	for line in $(cat $file)
+	do
+		if [ $ip == $line ]; then
+			echo $lab
+			if [ -r $lab.software ]; then
+				cat $lab.software
+			fi
+			exit 0
+		fi
+	done
+done
+
+exit 0

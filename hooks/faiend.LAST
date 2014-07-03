@@ -1,0 +1,5 @@
+#!/bin/bash
+
+/opt/faith-complete.sh
+
+exit 0
