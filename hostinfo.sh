@@ -18,12 +18,10 @@ bytes_to_megabytes()
 		echo $div
 	fi
 }
-
 get_interfaces()
 {
 	ifconfig -a | awk '/^[a-z]+/ && !/^lo /{print $1}'
 }
-
 get_if_ip()
 {
 	if [ -z $1 ]  
@@ -40,18 +38,13 @@ get_if_hw()
 		echo error: błędny parametr funkcji get_if_hw 
 		exit 1 
 	fi
-	ifconfig $1 | awk '/HWaddr/{print $5}'
+	ifconfig eth0 | awk '/HWaddr/{print $5}'
 }
-
 db_execute()
 {
 	echo "SQL: " $1
 	echo $1 | $db_open_cmd
 }
-#db_create_tab_ifaces()
-#{
-#	db_execute "create table ifaces (dev text, hwaddr text, ip text);"
-#}
 db_create_tab_general()
 {
     db_execute "create table general (key text primary key, value text);"
@@ -61,15 +54,6 @@ db_create_tab_disk()
 	db_execute "create table disk (dev text, size text, pt_type text);" 
 	db_execute "create table partition (dev text, id int, size text, fs_type text, flags text, primary key (dev, id), foreign key(dev) references disk(dev) );" 
 }
-#db_insert_ifaces()
-#{
-#	for dev in $(get_interfaces)
-#	do
-#		ip=$(get_if_ip $dev)
-#		hw=$(get_if_hw $dev)
-#		db_execute "insert into ifaces values ('$dev','$hw','$ip');"
-#	done
-#}
 db_insert_primary_mac()
 {
     IP_ADDR=$(host $SERVER | awk '/has address/ { print $4 }') 
@@ -89,65 +73,46 @@ get_disks()
 
 get_disk_size()
 {
-	LC_ALL=C fdisk -l 2>/dev/null | awk -F"[ ,]" '/Disk \/dev\/'$1'/ {print $3$4}'
+	#LC_ALL=C fdisk -l 2>/dev/null | awk -F"[ ,]" '/Disk \/dev\/'$1'/ {print $3$4}'
+	LC_ALL=C parted /dev/$1 unit MB print | awk '/Disk/{print $3}'
 }
-
+get_disk_label()
+{
+	LC_ALL=C parted /dev/$1 unit MB print | awk '/Partition Table:/{print $3}'
+}
+get_partitions()
+{
+	LC_ALL=C parted /dev/$1 unit MB print | grep '^ [1-9][0-9]*' | awk '{print $1 "_" $4 "_" $5 "_" $6 "_" $7}'
+}
 db_insert_disks()
 {
-	#for line in $(LC_ALL=C parted -lm | tr -d '\r' | sed -e 's/^[ \t]*//')
-	for line in $(LC_ALL=C parted -lm | tr -d '\r' | awk '{$1 = $1; print }' | sed 's/ /_SPACE_/g')
+	for disk_dev in $(get_disks)
 	do
-		line=$(echo $line | sed 's/_SPACE_/ /g')
-		#echo LINE=$line
-		case $line in
-		BYT";"	) unit=BYT ;;
-		CHS";"	) unit=CHS ;;
-		CYL";"	) unit=CYL ;;
-		/dev/*";" 	)
-			disk_dev=$(echo $line | awk -F"[:/]" '{ print $3 }' )
-			disk_size=$(echo $line | awk -F: '{print $2}')
-			disk_pt_type=$(echo $line | awk -F: '{print $6}')
-			#echo $disk_dev:$disk_size:$disk_pt_type
-			db_execute "insert into disk values ('$disk_dev','$disk_size','$disk_pt_type');"
-					
-		;;
-		[[:digit:]+]:*	)
-			part_id=$(echo $line | awk -F"[:]" '{ print $1 }' )
-			part_size=$(echo $line | awk -F"[:]" '{ print $4 }' )
-			part_fstype=$(echo $line | awk -F"[:]" '{ print $5 }' )
-			part_flags=$(echo $line | awk -F"[:;]" '{ print $7 }' )
-			if [ $disk_pt_type = msdos ] && [ -z $part_fstype  ] 
-			then
+		disk_size=$(get_disk_size $disk_dev)
+		disk_label=$(get_disk_label $disk_dev)
+		db_execute "insert into disk values ('$disk_dev','$disk_size','$disk_label');"
+		for part_line in $(get_partitions $disk_dev)
+		do
+			part_id=$(echo $part_line | awk -F_ '{print $1}')
+			part_size=$(echo $part_line | awk -F_ '{print $2}')
+			part_type=$(echo $part_line | awk -F_ '{print $3}')
+			part_fstype=$(echo $part_line | awk -F_ '{print $4}')
+			part_flags=$(echo $part_line | awk -F_ '{print $5}')			
+			if [ $part_type == "extended" ] 
+			then				
 				if [ -z $part_flags ]
 				then
 					part_flags=extended
 				else
-					part_flags=$part_flags,EXTENDED
+					part_flags=$part_flags,extended
 				fi
-			fi
-			#echo $part_id:$part_size:$part_fstype:$part_flags
+			fi	
+			case "$part_fstype" in
+				*swap* ) part_fstype="swap";;
+			esac		
 			db_execute "insert into partition values ('$disk_dev', $part_id,'$part_size', '$part_fstype', '$part_flags');"			
-			;;
-		"Error: /dev/"*": unrecognised disk label")
-			unit=""
-			disk_dev=$(echo $line | awk -F"[:/]" '{ print $4}' )
-			disk_pt_type=""
-			disk_size=$(get_disk_size $disk_dev)
-			echo $disk_dev:$disk_size:$disk_pt_type
-			;;
-		* ) echo $unit " # " $line ;;
-		esac
-			
-		#case $line in
-		#	*";"	 ) echo jest srednik ;;
-		#	#[0-9]* ) echo liczba ;;
-		#	*	 ) echo nie ma srednika ;;
-		#esac
+		done
 	done
-	#for d in $(get_disks)
-	#do
-	#	get_disk_size $d
-	#done
 }
 init()
 {
