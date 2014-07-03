@@ -40,7 +40,7 @@ get_if_hw()
 		echo error: błędny parametr funkcji get_if_hw 
 		exit 1 
 	fi
-	ifconfig eth0 | awk '/HWaddr/{print $5}'
+	ifconfig $1 | awk '/HWaddr/{print $5}'
 }
 
 db_execute()
