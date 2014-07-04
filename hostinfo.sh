@@ -75,7 +75,7 @@ get_disk_size()
 {
 	bytes=$(LC_ALL=C fdisk -l 2>/dev/null | awk -F"[ ,]" '/Disk \/dev\/'$1'/ {print $6}')
 	mib=$(bytes_to_megabytes $bytes)
-	echo $mibMiB	
+	echo $mib'MiB'	
 }
 get_disk_label()
 {
