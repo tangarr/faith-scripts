@@ -8,10 +8,10 @@ db_open_cmd="sqlite3 $db_name"
 #-------FUNKCJE------------
 bytes_to_megabytes()
 {
-	div=`expr $1 / 1000000`
-	mod=`expr $1 % 1000000`
+	div=`expr $1 / 1048576`
+	mod=`expr $1 % 1048576`
 
-	if [ $mod -ge 500000 ]
+	if [ $mod -ge 524288 ]
 	then
 		expr $div + 1
 	else
@@ -73,8 +73,9 @@ get_disks()
 
 get_disk_size()
 {
-	#LC_ALL=C fdisk -l 2>/dev/null | awk -F"[ ,]" '/Disk \/dev\/'$1'/ {print $3$4}'
-	LC_ALL=C parted /dev/$1 unit MiB print | awk '/Disk/{print $3}'
+	bytes=$(LC_ALL=C fdisk -l 2>/dev/null | awk -F"[ ,]" '/Disk \/dev\/'$1'/ {print $6}')
+	mib=$(bytes_to_megabytes $bytes)
+	echo $mibMiB	
 }
 get_disk_label()
 {
