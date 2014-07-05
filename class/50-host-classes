@@ -3,7 +3,7 @@
 iface=$(ip route ls | grep default | awk '{print $5}')
 ip=$(ifconfig $iface | awk -F"[: ]" '/inet addr/{print $13}')
 
-echo GRUB_PC DEBIAN
+echo GRUB_PC
 
 for file in *.hostlist
 do

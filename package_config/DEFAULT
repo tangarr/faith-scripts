@@ -1,0 +1,7 @@
+PACKAGES aptitude DEVELOPERTOOLS
+build-essential
+
+PACKAGES aptitude WWWSERVER
+apache2
+php5
+mysql-server
