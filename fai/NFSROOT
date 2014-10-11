@@ -1,0 +1,43 @@
+# package list for creating the NFSROOT
+
+PACKAGES aptitude
+nfs-common fai-nfsroot module-init-tools ssh rdate lshw rpcbind
+rsync lftp less dump reiserfsprogs e2fsprogs usbutils
+hwinfo psmisc pciutils hdparm smartmontools parted mdadm lvm2
+dnsutils ntpdate dosfstools xfsprogs xfsdump
+procinfo numactl dialog
+console-tools console-common
+iproute udev subversion
+xz-utils
+cupt ntfs-3g sqlite3 libglib2.0-0
+
+# some network cards needs firmware
+firmware-bnx2 firmware-bnx2x firmware-realtek
+
+# dracut can replace live-boot
+dracut-network live-boot- live-boot-initramfs-tools-
+
+# squeeze also needs initramfs-tools, even with dracut
+#initramfs-tools
+
+# choose if you like live-boot or dracut inside the nfsroot
+#live-boot live-boot-doc
+
+# you should not edit the lines below
+# architecture dependend list of packages that are installed
+
+#git # git consumes a lot of disk space on the FAI CD (ISO 9660)
+
+PACKAGES aptitude I386
+grub-pc read-edid
+linux-image-3.13-0.bpo.1-486_3
+
+# packages for Ubuntu natty/oneiric/precise:
+# linux-image-generic live-boot
+
+PACKAGES aptitude AMD64
+grub-pc
+linux-image-3.13-0.bpo.1-amd64
+
+# packages for Ubuntu natty/oneiric/precise:
+# linux-image-generic live-boot
